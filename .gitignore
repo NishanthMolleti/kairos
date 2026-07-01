@@ -1,0 +1,18 @@
+# Go
+backend/kairos
+backend/*.exe
+backend/vendor/
+*.env
+
+# Next.js
+frontend/.next/
+frontend/out/
+frontend/node_modules/
+frontend/.env*
+
+# OS
+.DS_Store
+
+# IDE
+.idea/
+.vscode/
