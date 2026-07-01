@@ -1,3 +1,6 @@
+# Worktrees
+.worktrees/
+
 # Go
 backend/kairos
 backend/*.exe
