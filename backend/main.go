@@ -30,7 +30,7 @@ func main() {
 		userH := handlers.NewUserHandler(database)
 		api.GET("/user", userH.GetUser)
 
-		syncH := handlers.NewSyncHandler(database)
+		syncH := handlers.NewSyncHandler(database, cfg.HuggingFaceAPIKey)
 		api.POST("/sync", syncH.Sync)
 
 		metricsH := handlers.NewMetricsHandler(database)
@@ -42,9 +42,14 @@ func main() {
 		api.GET("/metrics/spo2", metricsH.SpO2)
 		api.GET("/metrics/stress", metricsH.Stress)
 		api.GET("/metrics/workouts", metricsH.Workouts)
+
+		chatH := handlers.NewChatHandler(database, cfg)
+		api.POST("/chat/sessions", chatH.CreateSession)
+		api.GET("/chat/sessions/:id/messages", chatH.GetMessages)
+		api.POST("/chat/sessions/:id/ask", chatH.AskSage)
 	}
 
-	c := scheduler.Start(database)
+	c := scheduler.Start(database, cfg.HuggingFaceAPIKey)
 	defer c.Stop()
 
 	log.Printf("Kairos backend running on :%s", cfg.Port)
