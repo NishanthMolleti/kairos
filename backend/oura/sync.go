@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/NishanthMolleti/kairos/ai"
 	"github.com/NishanthMolleti/kairos/models"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
@@ -87,7 +88,7 @@ func dateRange() (string, string) {
 	return from, to
 }
 
-func SyncUser(ctx context.Context, db *sqlx.DB, userID uuid.UUID, accessToken string) error {
+func SyncUser(ctx context.Context, db *sqlx.DB, userID uuid.UUID, accessToken string, hfAPIKey string) error {
 	client := NewClient(accessToken)
 	from, to := dateRange()
 	params := url.Values{"start_date": {from}, "end_date": {to}}
@@ -230,6 +231,11 @@ func SyncUser(ctx context.Context, db *sqlx.DB, userID uuid.UUID, accessToken st
 
 	if len(errs) > 0 {
 		log.Printf("sync user %s partial errors: %v", userID, errs)
+	}
+
+	// Generate narrative for today after sync completes.
+	if err := ai.GenerateAndStoreNarrative(db, userID, time.Now(), hfAPIKey); err != nil {
+		log.Printf("narrative generation failed for user %s: %v", userID, err)
 	}
 
 	return models.UpdateLastSync(db, userID)

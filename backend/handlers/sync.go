@@ -10,9 +10,14 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
-type SyncHandler struct{ db *sqlx.DB }
+type SyncHandler struct {
+	db       *sqlx.DB
+	hfAPIKey string
+}
 
-func NewSyncHandler(db *sqlx.DB) *SyncHandler { return &SyncHandler{db: db} }
+func NewSyncHandler(db *sqlx.DB, hfAPIKey string) *SyncHandler {
+	return &SyncHandler{db: db, hfAPIKey: hfAPIKey}
+}
 
 // POST /api/sync
 func (h *SyncHandler) Sync(c *gin.Context) {
@@ -22,7 +27,7 @@ func (h *SyncHandler) Sync(c *gin.Context) {
 		c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
 		return
 	}
-	if err := oura.SyncUser(c.Request.Context(), h.db, userID, user.AccessToken); err != nil {
+	if err := oura.SyncUser(c.Request.Context(), h.db, userID, user.AccessToken, h.hfAPIKey); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "sync failed"})
 		return
 	}
