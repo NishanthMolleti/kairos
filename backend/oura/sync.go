@@ -353,9 +353,12 @@ func SyncUser(ctx context.Context, db *sqlx.DB, userID uuid.UUID, accessToken, r
 		log.Printf("sync user %s partial errors: %v", userID, errs)
 	}
 
-	// Generate narrative for today after sync completes.
-	if err := ai.GenerateAndStoreNarrative(db, userID, time.Now(), hfAPIKey); err != nil {
-		log.Printf("narrative generation failed for user %s: %v", userID, err)
+	// Generate narratives for the last 7 days (today may have no data yet).
+	for i := 0; i < 7; i++ {
+		day := time.Now().AddDate(0, 0, -i)
+		if err := ai.GenerateAndStoreNarrative(db, userID, day, hfAPIKey); err != nil {
+			log.Printf("narrative generation failed for user %s day %s: %v", userID, day.Format("2006-01-02"), err)
+		}
 	}
 
 	return models.UpdateLastSync(db, userID)

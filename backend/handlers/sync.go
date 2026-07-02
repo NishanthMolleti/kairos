@@ -1,7 +1,9 @@
 package handlers
 
 import (
+	"context"
 	"net/http"
+	"time"
 
 	kauth "github.com/NishanthMolleti/kairos/auth"
 	"github.com/NishanthMolleti/kairos/models"
@@ -29,7 +31,9 @@ func (h *SyncHandler) Sync(c *gin.Context) {
 		c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
 		return
 	}
-	if err := oura.SyncUser(c.Request.Context(), h.db, userID, user.AccessToken, user.RefreshToken, h.oauth, h.hfAPIKey); err != nil {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+	defer cancel()
+	if err := oura.SyncUser(ctx, h.db, userID, user.AccessToken, user.RefreshToken, h.oauth, h.hfAPIKey); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "sync failed"})
 		return
 	}
