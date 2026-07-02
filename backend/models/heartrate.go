@@ -36,7 +36,7 @@ func BulkUpsertHeartRate(db *sqlx.DB, rows []HeartRate) error {
 }
 
 func GetHeartRateRange(db *sqlx.DB, userID uuid.UUID, from, to string) ([]HeartRate, error) {
-	var rows []HeartRate
+	rows := make([]HeartRate, 0)
 	err := db.Select(&rows,
 		`SELECT * FROM heart_rate WHERE user_id = $1 AND timestamp BETWEEN $2 AND $3 ORDER BY timestamp`,
 		userID, from, to)

@@ -44,7 +44,7 @@ func UpsertDailySleep(db *sqlx.DB, s *DailySleep) error {
 }
 
 func GetSleepRange(db *sqlx.DB, userID uuid.UUID, from, to string) ([]DailySleep, error) {
-	var rows []DailySleep
+	rows := make([]DailySleep, 0)
 	err := db.Select(&rows,
 		`SELECT * FROM daily_sleep WHERE user_id = $1 AND date BETWEEN $2 AND $3 ORDER BY date`,
 		userID, from, to)

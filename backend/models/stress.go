@@ -27,7 +27,7 @@ func UpsertDailyStress(db *sqlx.DB, s *DailyStress) error {
 }
 
 func GetStressRange(db *sqlx.DB, userID uuid.UUID, from, to string) ([]DailyStress, error) {
-	var rows []DailyStress
+	rows := make([]DailyStress, 0)
 	err := db.Select(&rows,
 		`SELECT * FROM daily_stress WHERE user_id = $1 AND date BETWEEN $2 AND $3 ORDER BY date`,
 		userID, from, to)

@@ -25,7 +25,7 @@ func UpsertDailyHRV(db *sqlx.DB, h *DailyHRV) error {
 }
 
 func GetHRVRange(db *sqlx.DB, userID uuid.UUID, from, to string) ([]DailyHRV, error) {
-	var rows []DailyHRV
+	rows := make([]DailyHRV, 0)
 	err := db.Select(&rows,
 		`SELECT * FROM daily_hrv WHERE user_id = $1 AND date BETWEEN $2 AND $3 ORDER BY date`,
 		userID, from, to)

@@ -28,7 +28,7 @@ func UpsertWorkout(db *sqlx.DB, w *Workout) error {
 }
 
 func GetWorkoutsRange(db *sqlx.DB, userID uuid.UUID, from, to string) ([]Workout, error) {
-	var rows []Workout
+	rows := make([]Workout, 0)
 	err := db.Select(&rows,
 		`SELECT * FROM workouts WHERE user_id = $1 AND start_datetime BETWEEN $2 AND $3 ORDER BY start_datetime`,
 		userID, from, to)

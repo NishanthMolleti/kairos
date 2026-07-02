@@ -39,7 +39,7 @@ func UpsertDailyActivity(db *sqlx.DB, a *DailyActivity) error {
 }
 
 func GetActivityRange(db *sqlx.DB, userID uuid.UUID, from, to string) ([]DailyActivity, error) {
-	var rows []DailyActivity
+	rows := make([]DailyActivity, 0)
 	err := db.Select(&rows,
 		`SELECT * FROM daily_activity WHERE user_id = $1 AND date BETWEEN $2 AND $3 ORDER BY date`,
 		userID, from, to)

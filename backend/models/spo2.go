@@ -25,7 +25,7 @@ func UpsertDailySpO2(db *sqlx.DB, s *DailySpO2) error {
 }
 
 func GetSpO2Range(db *sqlx.DB, userID uuid.UUID, from, to string) ([]DailySpO2, error) {
-	var rows []DailySpO2
+	rows := make([]DailySpO2, 0)
 	err := db.Select(&rows,
 		`SELECT * FROM daily_spo2 WHERE user_id = $1 AND date BETWEEN $2 AND $3 ORDER BY date`,
 		userID, from, to)

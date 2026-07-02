@@ -37,7 +37,7 @@ func UpsertDailyReadiness(db *sqlx.DB, r *DailyReadiness) error {
 }
 
 func GetReadinessRange(db *sqlx.DB, userID uuid.UUID, from, to string) ([]DailyReadiness, error) {
-	var rows []DailyReadiness
+	rows := make([]DailyReadiness, 0)
 	err := db.Select(&rows,
 		`SELECT * FROM daily_readiness WHERE user_id = $1 AND date BETWEEN $2 AND $3 ORDER BY date`,
 		userID, from, to)
