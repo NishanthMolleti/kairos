@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"context"
 	"log"
 	"net/http"
 	"sync"
@@ -133,7 +134,7 @@ func (h *AuthHandler) Callback(c *gin.Context) {
 	}
 
 	go func() {
-		if err := oura.SyncUser(c.Request.Context(), h.db, dbUser.ID, tokens.AccessToken, h.hfAPIKey); err != nil {
+		if err := oura.SyncUser(context.Background(), h.db, dbUser.ID, tokens.AccessToken, h.hfAPIKey); err != nil {
 			log.Printf("post-login sync failed for user %s: %v", dbUser.ID, err)
 		}
 	}()
