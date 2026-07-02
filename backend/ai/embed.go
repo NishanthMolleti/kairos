@@ -12,12 +12,12 @@ import (
 const hfEmbedURL = "https://router.huggingface.co/hf-inference/models/sentence-transformers/all-MiniLM-L6-v2/pipeline/feature-extraction"
 
 type hfEmbedRequest struct {
-	Inputs string `json:"inputs"`
+	Inputs []string `json:"inputs"`
 }
 
 // Embed calls HuggingFace all-MiniLM-L6-v2 and returns a 384-dimensional vector.
 func Embed(text, hfAPIKey string) ([]float32, error) {
-	body, err := json.Marshal(hfEmbedRequest{Inputs: text})
+	body, err := json.Marshal(hfEmbedRequest{Inputs: []string{text}})
 	if err != nil {
 		return nil, fmt.Errorf("embed: marshal: %w", err)
 	}
