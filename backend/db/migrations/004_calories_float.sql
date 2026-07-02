@@ -1,0 +1,1 @@
+ALTER TABLE workouts ALTER COLUMN calories TYPE FLOAT USING calories::FLOAT;

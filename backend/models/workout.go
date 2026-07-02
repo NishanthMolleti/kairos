@@ -12,7 +12,7 @@ type Workout struct {
 	StartDatetime time.Time  `db:"start_datetime" json:"start_datetime"`
 	EndDatetime   *time.Time `db:"end_datetime" json:"end_datetime"`
 	Activity      *string    `db:"activity" json:"activity"`
-	Calories      *int       `db:"calories" json:"calories"`
+	Calories      *float64   `db:"calories" json:"calories"`
 	Distance      *float64   `db:"distance" json:"distance"`
 }
 

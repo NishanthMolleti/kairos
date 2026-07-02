@@ -74,11 +74,24 @@ type ouraStress struct {
 	DaySummary   *string `json:"day_summary"`
 }
 
+type ouraSleepSession struct {
+	Day                string   `json:"day"`
+	TotalSleepDuration *int     `json:"total_sleep_duration"`
+	Efficiency         *int     `json:"efficiency"`
+	Latency            *int     `json:"latency"`
+	RemSleepDuration   *int     `json:"rem_sleep_duration"`
+	DeepSleepDuration  *int     `json:"deep_sleep_duration"`
+	LightSleepDuration *int     `json:"light_sleep_duration"`
+	AwakeTime          *int     `json:"awake_time"`
+	RestlessPeriods    *int     `json:"restless_periods"`
+	AverageHRV         *float64 `json:"average_hrv"`
+}
+
 type ouraWorkout struct {
 	StartDatetime string   `json:"start_datetime"`
 	EndDatetime   string   `json:"end_datetime"`
 	Activity      string   `json:"activity"`
-	Calories      *int     `json:"calories"`
+	Calories      *float64 `json:"calories"`
 	Distance      *float64 `json:"distance"`
 }
 
@@ -94,22 +107,91 @@ func SyncUser(ctx context.Context, db *sqlx.DB, userID uuid.UUID, accessToken st
 	params := url.Values{"start_date": {from}, "end_date": {to}}
 	var errs []error
 
-	// Sleep
+	// Sleep — /daily_sleep gives score; /sleep gives detailed durations
+	scoreByDay := map[string]*int{}
 	sleepData, err := get[ouraSleep](ctx, client, "/daily_sleep", params)
 	if err != nil {
 		errs = append(errs, fmt.Errorf("sleep: %w", err))
 	} else {
 		for _, s := range sleepData {
-			date, _ := time.Parse("2006-01-02", s.Day)
-			models.UpsertDailySleep(db, &models.DailySleep{
-				UserID: userID, Date: date,
-				Score: s.Score, TotalSleepDuration: s.TotalSleepDuration,
-				Efficiency: s.Efficiency, Latency: s.Latency,
-				REMSleepDuration: s.RemSleepDuration, DeepSleepDuration: s.DeepSleepDuration,
-				LightSleepDuration: s.LightSleepDuration, AwakeTime: s.AwakeTime,
-				RestlessPeriods: s.RestlessPeriods,
-			})
+			v := s.Score
+			scoreByDay[s.Day] = v
 		}
+	}
+
+	// Aggregate detailed sleep sessions by day
+	type sleepAgg struct {
+		total, rem, deep, light, awake, restless, latency, efficiency *int
+		hrvSum                                                         float64
+		hrvCount                                                       int
+	}
+	aggByDay := map[string]*sleepAgg{}
+	sessionData, err := get[ouraSleepSession](ctx, client, "/sleep", params)
+	if err != nil {
+		errs = append(errs, fmt.Errorf("sleep_sessions: %w", err))
+	} else {
+		addInt := func(a, b *int) *int {
+			if a == nil && b == nil {
+				return nil
+			}
+			va, vb := 0, 0
+			if a != nil {
+				va = *a
+			}
+			if b != nil {
+				vb = *b
+			}
+			v := va + vb
+			return &v
+		}
+		for _, s := range sessionData {
+			agg, ok := aggByDay[s.Day]
+			if !ok {
+				agg = &sleepAgg{}
+				aggByDay[s.Day] = agg
+			}
+			agg.total = addInt(agg.total, s.TotalSleepDuration)
+			agg.rem = addInt(agg.rem, s.RemSleepDuration)
+			agg.deep = addInt(agg.deep, s.DeepSleepDuration)
+			agg.light = addInt(agg.light, s.LightSleepDuration)
+			agg.awake = addInt(agg.awake, s.AwakeTime)
+			agg.restless = addInt(agg.restless, s.RestlessPeriods)
+			// use last session's latency/efficiency (primary sleep)
+			if s.Latency != nil {
+				agg.latency = s.Latency
+			}
+			if s.Efficiency != nil {
+				agg.efficiency = s.Efficiency
+			}
+			if s.AverageHRV != nil {
+				agg.hrvSum += *s.AverageHRV
+				agg.hrvCount++
+			}
+		}
+	}
+
+	// Merge score + details, upsert
+	allDays := map[string]bool{}
+	for d := range scoreByDay {
+		allDays[d] = true
+	}
+	for d := range aggByDay {
+		allDays[d] = true
+	}
+	for day := range allDays {
+		date, _ := time.Parse("2006-01-02", day)
+		row := &models.DailySleep{UserID: userID, Date: date, Score: scoreByDay[day]}
+		if agg, ok := aggByDay[day]; ok {
+			row.TotalSleepDuration = agg.total
+			row.REMSleepDuration = agg.rem
+			row.DeepSleepDuration = agg.deep
+			row.LightSleepDuration = agg.light
+			row.AwakeTime = agg.awake
+			row.RestlessPeriods = agg.restless
+			row.Latency = agg.latency
+			row.Efficiency = agg.efficiency
+		}
+		models.UpsertDailySleep(db, row)
 	}
 
 	// Readiness
@@ -147,10 +229,20 @@ func SyncUser(ctx context.Context, db *sqlx.DB, userID uuid.UUID, accessToken st
 		}
 	}
 
-	// HRV
+	// HRV — try /daily_hrv; fall back to average_hrv from sleep sessions
 	hrvData, err := get[ouraHRV](ctx, client, "/daily_hrv", params)
 	if err != nil {
-		errs = append(errs, fmt.Errorf("hrv: %w", err))
+		// /daily_hrv is unavailable on some Oura plans — use sleep-session HRV
+		for day, agg := range aggByDay {
+			if agg.hrvCount == 0 {
+				continue
+			}
+			avg := agg.hrvSum / float64(agg.hrvCount)
+			date, _ := time.Parse("2006-01-02", day)
+			models.UpsertDailyHRV(db, &models.DailyHRV{
+				UserID: userID, Date: date, RMSSD: &avg,
+			})
+		}
 	} else {
 		for _, h := range hrvData {
 			date, _ := time.Parse("2006-01-02", h.Day)
