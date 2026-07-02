@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"log"
 	"net/http"
 	"sync"
 	"time"
@@ -77,11 +78,17 @@ func (h *AuthHandler) Callback(c *gin.Context) {
 	state := c.Query("state")
 
 	h.statesMu.Lock()
+	keys := make([]string, 0, len(h.states))
+	for k := range h.states {
+		keys = append(keys, k)
+	}
 	entry, ok := h.states[state]
 	if ok {
 		delete(h.states, state)
 	}
 	h.statesMu.Unlock()
+
+	log.Printf("callback: state=%q code_len=%d stored_keys_count=%d ok=%v", state, len(code), len(keys), ok)
 
 	if !ok || time.Now().After(entry.expiresAt) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "state mismatch"})

@@ -22,7 +22,7 @@ func main() {
 
 	authH := handlers.NewAuthHandler(cfg, database)
 	r.GET("/auth/login", authH.Login)
-	r.GET("/auth/callback", authH.Callback)
+	r.GET("/api/auth/callback", authH.Callback)
 	r.POST("/auth/logout", authH.Logout)
 
 	api := r.Group("/api", middleware.AuthRequired(cfg.JWTSecret))
