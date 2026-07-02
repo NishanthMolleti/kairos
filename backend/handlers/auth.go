@@ -2,6 +2,8 @@ package handlers
 
 import (
 	"net/http"
+	"sync"
+	"time"
 
 	kauth "github.com/NishanthMolleti/kairos/auth"
 	"github.com/NishanthMolleti/kairos/config"
@@ -10,14 +12,21 @@ import (
 	"github.com/jmoiron/sqlx"
 )
 
+type pkceEntry struct {
+	verifier  string
+	expiresAt time.Time
+}
+
 type AuthHandler struct {
-	cfg   *config.Config
-	db    *sqlx.DB
-	oauth *kauth.OAuthConfig
+	cfg       *config.Config
+	db        *sqlx.DB
+	oauth     *kauth.OAuthConfig
+	statesMu  sync.Mutex
+	states    map[string]pkceEntry
 }
 
 func NewAuthHandler(cfg *config.Config, db *sqlx.DB) *AuthHandler {
-	return &AuthHandler{
+	h := &AuthHandler{
 		cfg: cfg,
 		db:  db,
 		oauth: &kauth.OAuthConfig{
@@ -25,6 +34,22 @@ func NewAuthHandler(cfg *config.Config, db *sqlx.DB) *AuthHandler {
 			ClientSecret: cfg.OuraClientSecret,
 			RedirectURL:  cfg.OuraRedirectURL,
 		},
+		states: make(map[string]pkceEntry),
+	}
+	go h.cleanupStates()
+	return h
+}
+
+func (h *AuthHandler) cleanupStates() {
+	for range time.Tick(5 * time.Minute) {
+		h.statesMu.Lock()
+		now := time.Now()
+		for k, v := range h.states {
+			if now.After(v.expiresAt) {
+				delete(h.states, k)
+			}
+		}
+		h.statesMu.Unlock()
 	}
 }
 
@@ -40,8 +65,9 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "state failed"})
 		return
 	}
-	c.SetCookie("pkce_verifier", verifier, 600, "/", "", true, true)
-	c.SetCookie("oauth_state", state, 600, "/", "", true, true)
+	h.statesMu.Lock()
+	h.states[state] = pkceEntry{verifier: verifier, expiresAt: time.Now().Add(10 * time.Minute)}
+	h.statesMu.Unlock()
 	c.Redirect(http.StatusFound, h.oauth.AuthURL(state, challenge))
 }
 
@@ -50,18 +76,19 @@ func (h *AuthHandler) Callback(c *gin.Context) {
 	code := c.Query("code")
 	state := c.Query("state")
 
-	cookieState, err := c.Cookie("oauth_state")
-	if err != nil || cookieState != state {
+	h.statesMu.Lock()
+	entry, ok := h.states[state]
+	if ok {
+		delete(h.states, state)
+	}
+	h.statesMu.Unlock()
+
+	if !ok || time.Now().After(entry.expiresAt) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "state mismatch"})
 		return
 	}
-	verifier, err := c.Cookie("pkce_verifier")
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "missing verifier"})
-		return
-	}
 
-	tokens, err := h.oauth.ExchangeCode(c.Request.Context(), code, verifier)
+	tokens, err := h.oauth.ExchangeCode(c.Request.Context(), code, entry.verifier)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "token exchange failed"})
 		return
