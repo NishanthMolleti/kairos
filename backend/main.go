@@ -20,7 +20,7 @@ func main() {
 	r := gin.Default()
 	r.Use(middleware.CORS(cfg.FrontendURL))
 
-	authH := handlers.NewAuthHandler(cfg, database)
+	authH := handlers.NewAuthHandler(cfg, database, cfg.HuggingFaceAPIKey)
 	r.GET("/auth/login", authH.Login)
 	r.GET("/api/auth/callback", authH.Callback)
 	r.POST("/auth/logout", authH.Logout)

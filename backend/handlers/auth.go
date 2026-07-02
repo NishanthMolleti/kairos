@@ -9,6 +9,7 @@ import (
 	kauth "github.com/NishanthMolleti/kairos/auth"
 	"github.com/NishanthMolleti/kairos/config"
 	"github.com/NishanthMolleti/kairos/models"
+	"github.com/NishanthMolleti/kairos/oura"
 	"github.com/gin-gonic/gin"
 	"github.com/jmoiron/sqlx"
 )
@@ -21,15 +22,17 @@ type pkceEntry struct {
 type AuthHandler struct {
 	cfg       *config.Config
 	db        *sqlx.DB
+	hfAPIKey  string
 	oauth     *kauth.OAuthConfig
 	statesMu  sync.Mutex
 	states    map[string]pkceEntry
 }
 
-func NewAuthHandler(cfg *config.Config, db *sqlx.DB) *AuthHandler {
+func NewAuthHandler(cfg *config.Config, db *sqlx.DB, hfAPIKey string) *AuthHandler {
 	h := &AuthHandler{
-		cfg: cfg,
-		db:  db,
+		cfg:      cfg,
+		db:       db,
+		hfAPIKey: hfAPIKey,
 		oauth: &kauth.OAuthConfig{
 			ClientID:     cfg.OuraClientID,
 			ClientSecret: cfg.OuraClientSecret,
@@ -129,6 +132,11 @@ func (h *AuthHandler) Callback(c *gin.Context) {
 		return
 	}
 
+	go func() {
+		if err := oura.SyncUser(c.Request.Context(), h.db, dbUser.ID, tokens.AccessToken, h.hfAPIKey); err != nil {
+			log.Printf("post-login sync failed for user %s: %v", dbUser.ID, err)
+		}
+	}()
 	c.Redirect(http.StatusFound, h.cfg.FrontendURL+"/auth/callback?token="+jwt)
 }
 
