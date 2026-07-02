@@ -61,7 +61,7 @@ func (c *OAuthConfig) AuthURL(state, challenge string) string {
 		"response_type":         {"code"},
 		"client_id":             {c.ClientID},
 		"redirect_uri":          {c.RedirectURL},
-		"scope":                 {"email personal daily workout heartrate"},
+		"scope":                 {"email personal daily workout heartrate spo2"},
 		"state":                 {state},
 		"code_challenge":        {challenge},
 		"code_challenge_method": {"S256"},
