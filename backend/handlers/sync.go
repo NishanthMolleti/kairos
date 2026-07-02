@@ -3,6 +3,7 @@ package handlers
 import (
 	"net/http"
 
+	kauth "github.com/NishanthMolleti/kairos/auth"
 	"github.com/NishanthMolleti/kairos/models"
 	"github.com/NishanthMolleti/kairos/oura"
 	"github.com/gin-gonic/gin"
@@ -13,10 +14,11 @@ import (
 type SyncHandler struct {
 	db       *sqlx.DB
 	hfAPIKey string
+	oauth    *kauth.OAuthConfig
 }
 
-func NewSyncHandler(db *sqlx.DB, hfAPIKey string) *SyncHandler {
-	return &SyncHandler{db: db, hfAPIKey: hfAPIKey}
+func NewSyncHandler(db *sqlx.DB, hfAPIKey string, oauth *kauth.OAuthConfig) *SyncHandler {
+	return &SyncHandler{db: db, hfAPIKey: hfAPIKey, oauth: oauth}
 }
 
 // POST /api/sync
@@ -27,7 +29,7 @@ func (h *SyncHandler) Sync(c *gin.Context) {
 		c.JSON(http.StatusNotFound, gin.H{"error": "user not found"})
 		return
 	}
-	if err := oura.SyncUser(c.Request.Context(), h.db, userID, user.AccessToken, h.hfAPIKey); err != nil {
+	if err := oura.SyncUser(c.Request.Context(), h.db, userID, user.AccessToken, user.RefreshToken, h.oauth, h.hfAPIKey); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "sync failed"})
 		return
 	}

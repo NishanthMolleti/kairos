@@ -21,6 +21,8 @@ func NewClient(accessToken string) *Client {
 	return &Client{accessToken: accessToken, http: &http.Client{}}
 }
 
+func (c *Client) SetAccessToken(token string) { c.accessToken = token }
+
 type PagedResponse[T any] struct {
 	Data []T `json:"data"`
 }

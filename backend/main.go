@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 
+	kauth "github.com/NishanthMolleti/kairos/auth"
 	"github.com/NishanthMolleti/kairos/config"
 	"github.com/NishanthMolleti/kairos/db"
 	"github.com/NishanthMolleti/kairos/handlers"
@@ -20,6 +21,12 @@ func main() {
 	r := gin.Default()
 	r.Use(middleware.CORS(cfg.FrontendURL))
 
+	oauthCfg := &kauth.OAuthConfig{
+		ClientID:     cfg.OuraClientID,
+		ClientSecret: cfg.OuraClientSecret,
+		RedirectURL:  cfg.OuraRedirectURL,
+	}
+
 	authH := handlers.NewAuthHandler(cfg, database, cfg.HuggingFaceAPIKey)
 	r.GET("/auth/login", authH.Login)
 	r.GET("/api/auth/callback", authH.Callback)
@@ -30,7 +37,7 @@ func main() {
 		userH := handlers.NewUserHandler(database)
 		api.GET("/user", userH.GetUser)
 
-		syncH := handlers.NewSyncHandler(database, cfg.HuggingFaceAPIKey)
+		syncH := handlers.NewSyncHandler(database, cfg.HuggingFaceAPIKey, oauthCfg)
 		api.POST("/sync", syncH.Sync)
 
 		metricsH := handlers.NewMetricsHandler(database)
@@ -49,7 +56,7 @@ func main() {
 		api.POST("/chat/sessions/:id/ask", chatH.AskSage)
 	}
 
-	c := scheduler.Start(database, cfg.HuggingFaceAPIKey)
+	c := scheduler.Start(database, cfg.HuggingFaceAPIKey, oauthCfg)
 	defer c.Stop()
 
 	log.Printf("Kairos backend running on :%s", cfg.Port)

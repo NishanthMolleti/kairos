@@ -6,8 +6,10 @@ import (
 	"fmt"
 	"log"
 	"net/url"
+	"strings"
 	"time"
 
+	kauth "github.com/NishanthMolleti/kairos/auth"
 	"github.com/NishanthMolleti/kairos/ai"
 	"github.com/NishanthMolleti/kairos/models"
 	"github.com/google/uuid"
@@ -105,7 +107,7 @@ func dateRange() (string, string) {
 	return from, to
 }
 
-func SyncUser(ctx context.Context, db *sqlx.DB, userID uuid.UUID, accessToken string, hfAPIKey string) error {
+func SyncUser(ctx context.Context, db *sqlx.DB, userID uuid.UUID, accessToken, refreshToken string, oauth *kauth.OAuthConfig, hfAPIKey string) error {
 	client := NewClient(accessToken)
 	from, to := dateRange()
 	params := url.Values{"start_date": {from}, "end_date": {to}}
@@ -322,6 +324,28 @@ func SyncUser(ctx context.Context, db *sqlx.DB, userID uuid.UUID, accessToken st
 				UserID: userID, StartDatetime: start, EndDatetime: end,
 				Activity: &activity, Calories: w.Calories, Distance: w.Distance,
 			})
+		}
+	}
+
+	// If any call returned 401, attempt a token refresh and retry the full sync once.
+	has401 := false
+	for _, e := range errs {
+		if strings.Contains(e.Error(), "401") {
+			has401 = true
+			break
+		}
+	}
+	if has401 && oauth != nil && refreshToken != "" {
+		log.Printf("sync user %s: 401 detected, refreshing token", userID)
+		newTokens, refreshErr := oauth.RefreshToken(ctx, refreshToken)
+		if refreshErr != nil {
+			log.Printf("sync user %s: token refresh failed: %v", userID, refreshErr)
+		} else {
+			if dbErr := models.UpdateTokens(db, userID, newTokens.AccessToken, newTokens.RefreshToken); dbErr != nil {
+				log.Printf("sync user %s: failed to store refreshed tokens: %v", userID, dbErr)
+			}
+			log.Printf("sync user %s: token refreshed, retrying sync", userID)
+			return SyncUser(ctx, db, userID, newTokens.AccessToken, newTokens.RefreshToken, oauth, hfAPIKey)
 		}
 	}
 

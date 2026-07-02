@@ -50,3 +50,8 @@ func UpdateLastSync(db *sqlx.DB, id uuid.UUID) error {
 	_, err := db.Exec(`UPDATE users SET last_sync = NOW() WHERE id = $1`, id)
 	return err
 }
+
+func UpdateTokens(db *sqlx.DB, id uuid.UUID, accessToken, refreshToken string) error {
+	_, err := db.Exec(`UPDATE users SET access_token=$1, refresh_token=$2 WHERE id=$3`, accessToken, refreshToken, id)
+	return err
+}
