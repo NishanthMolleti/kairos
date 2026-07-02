@@ -39,7 +39,7 @@ func RetrieveSimilar(db *sqlx.DB, userID uuid.UUID, embedding []float32, limit i
 	rows, err := db.Query(
 		`SELECT date, content, 1 - (embedding <=> $2::vector) AS similarity
 		 FROM data_narratives
-		 WHERE user_id = $1
+		 WHERE user_id = $1 AND embedding IS NOT NULL
 		 ORDER BY embedding <=> $2::vector
 		 LIMIT $3`,
 		userID, vecLiteral, limit,
