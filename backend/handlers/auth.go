@@ -40,8 +40,8 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "state failed"})
 		return
 	}
-	c.SetCookie("pkce_verifier", verifier, 600, "/", "", false, true)
-	c.SetCookie("oauth_state", state, 600, "/", "", false, true)
+	c.SetCookie("pkce_verifier", verifier, 600, "/", "", true, true)
+	c.SetCookie("oauth_state", state, 600, "/", "", true, true)
 	c.Redirect(http.StatusFound, h.oauth.AuthURL(state, challenge))
 }
 

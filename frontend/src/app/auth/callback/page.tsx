@@ -9,7 +9,7 @@ function CallbackInner() {
   const params = useSearchParams();
 
   useEffect(() => {
-    const token = params.get('token');
+    const token = params?.get('token');
     if (token) {
       setToken(token);
       router.replace('/');
