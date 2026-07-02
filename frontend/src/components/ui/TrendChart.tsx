@@ -21,6 +21,16 @@ function GlassTooltip({ active, payload, label }: TooltipProps<number, string>) 
 }
 
 export default function TrendChart({ data, color = '#7c3aed', label, unit }: TrendChartProps) {
+  const hasData = data.some(d => d.value != null);
+  if (!hasData) {
+    return (
+      <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-5">
+        {label && <p className="text-text-muted text-xs uppercase tracking-wider mb-4">{label}</p>}
+        <div className="h-[200px] flex items-center justify-center text-text-muted text-sm">No data available</div>
+      </div>
+    );
+  }
+
   const chartData = data.map((d) => ({ ...d, value: d.value ?? undefined }));
   return (
     <div className="bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-5">
