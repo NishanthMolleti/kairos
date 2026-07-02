@@ -9,13 +9,13 @@ import (
 	"time"
 )
 
-const hfEmbedURL = "https://router.huggingface.co/hf-inference/models/nomic-ai/nomic-embed-text-v1/pipeline/feature-extraction"
+const hfEmbedURL = "https://router.huggingface.co/hf-inference/models/sentence-transformers/all-MiniLM-L6-v2/pipeline/feature-extraction"
 
 type hfEmbedRequest struct {
 	Inputs string `json:"inputs"`
 }
 
-// Embed calls HuggingFace nomic-embed-text-v1 and returns a 768-dimensional vector.
+// Embed calls HuggingFace all-MiniLM-L6-v2 and returns a 384-dimensional vector.
 func Embed(text, hfAPIKey string) ([]float32, error) {
 	body, err := json.Marshal(hfEmbedRequest{Inputs: text})
 	if err != nil {
@@ -51,8 +51,8 @@ func Embed(text, hfAPIKey string) ([]float32, error) {
 	if len(outer) == 0 {
 		return nil, fmt.Errorf("embed: empty response")
 	}
-	if len(outer[0]) != 768 {
-		return nil, fmt.Errorf("embed: expected 768 dims, got %d", len(outer[0]))
+	if len(outer[0]) != 384 {
+		return nil, fmt.Errorf("embed: expected 384 dims, got %d", len(outer[0]))
 	}
 	return outer[0], nil
 }
