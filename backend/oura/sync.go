@@ -62,9 +62,13 @@ type ouraHeartRate struct {
 	Source    string `json:"source"`
 }
 
+type spo2Percentage struct {
+	Average *float64 `json:"average"`
+}
+
 type ouraSpO2 struct {
-	Day         string   `json:"day"`
-	SPO2Average *float64 `json:"spo2_percentage"`
+	Day         string        `json:"day"`
+	SPO2Average spo2Percentage `json:"spo2_percentage"`
 }
 
 type ouraStress struct {
@@ -281,7 +285,7 @@ func SyncUser(ctx context.Context, db *sqlx.DB, userID uuid.UUID, accessToken st
 		for _, s := range spo2Data {
 			date, _ := time.Parse("2006-01-02", s.Day)
 			models.UpsertDailySpO2(db, &models.DailySpO2{
-				UserID: userID, Date: date, AvgSpO2: s.SPO2Average,
+				UserID: userID, Date: date, AvgSpO2: s.SPO2Average.Average,
 			})
 		}
 	}
