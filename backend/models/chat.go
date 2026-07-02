@@ -46,7 +46,7 @@ func AddMessage(db *sqlx.DB, sessionID uuid.UUID, role, content string) (*ChatMe
 }
 
 func GetSessionMessages(db *sqlx.DB, sessionID uuid.UUID) ([]ChatMessage, error) {
-	var msgs []ChatMessage
+	msgs := []ChatMessage{}
 	err := db.Select(&msgs,
 		`SELECT id, session_id, role, content, sql_used, created_at
 		 FROM chat_messages WHERE session_id = $1

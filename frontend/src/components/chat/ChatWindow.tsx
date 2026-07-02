@@ -15,7 +15,7 @@ export default function ChatWindow({ sessionId }: Props) {
   const [streaming, setStreaming] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => { getChatMessages(sessionId).then(setMessages).catch(() => null); }, [sessionId]);
+  useEffect(() => { getChatMessages(sessionId).then(data => setMessages(data ?? [])).catch(() => null); }, [sessionId]);
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
 
   const handleSend = useCallback(async () => {
