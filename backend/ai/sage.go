@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -87,6 +88,7 @@ func Ask(
 		tokenCh <- fmt.Sprintf("ERROR:sql_gen:%v", err)
 		return
 	}
+	log.Printf("sage sql_gen: %q", sqlQuery)
 
 	// Step 2 — Execute SQL scoped to user.
 	sqlResults := ""
@@ -97,21 +99,29 @@ func Ask(
 			sqlResults = fmt.Sprintf("[SQL execution error: %v]", err)
 		}
 	}
+	log.Printf("sage sql_results: noSQL=%v results=%q", noSQL, sqlResults)
 
 	// Step 3 — Embed question + RAG retrieval.
 	narrativeContext := ""
 	embedding, embedErr := Embed(question, hfAPIKey)
-	if embedErr == nil {
+	if embedErr != nil {
+		log.Printf("sage embed error: %v", embedErr)
+	} else {
 		chunks, rerr := RetrieveSimilar(db, userID, embedding, 5)
-		if rerr == nil && len(chunks) > 0 {
-			var sb strings.Builder
-			for _, c := range chunks {
-				sb.WriteString(c.Date.Format("2006-01-02"))
-				sb.WriteString(": ")
-				sb.WriteString(c.Content)
-				sb.WriteString("\n")
+		if rerr != nil {
+			log.Printf("sage retrieve error: %v", rerr)
+		} else {
+			log.Printf("sage retrieved %d chunks", len(chunks))
+			if len(chunks) > 0 {
+				var sb strings.Builder
+				for _, c := range chunks {
+					sb.WriteString(c.Date.Format("2006-01-02"))
+					sb.WriteString(": ")
+					sb.WriteString(c.Content)
+					sb.WriteString("\n")
+				}
+				narrativeContext = sb.String()
 			}
-			narrativeContext = sb.String()
 		}
 	}
 
