@@ -46,8 +46,8 @@ export default function ChatWindow({ sessionId }: Props) {
 
         for (const line of lines) {
           if (!line.startsWith('data: ')) continue;
-          const raw = line.slice(6).trim();
-          if (raw === '[DONE]') break;
+          const raw = line.slice(6);
+          if (raw.trim() === '[DONE]') break;
           setMessages((prev) => prev.map((m) => m.id === assistantId ? { ...m, content: m.content + raw } : m));
         }
       }
