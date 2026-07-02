@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-const hfEmbedURL = "https://api-inference.huggingface.co/pipeline/feature-extraction/nomic-ai/nomic-embed-text-v1"
+const hfEmbedURL = "https://router.huggingface.co/hf-inference/models/nomic-ai/nomic-embed-text-v1/pipeline/feature-extraction"
 
 type hfEmbedRequest struct {
 	Inputs string `json:"inputs"`
