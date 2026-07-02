@@ -7,18 +7,18 @@ import (
 )
 
 type DailySleep struct {
-	ID                 uuid.UUID `db:"id"`
-	UserID             uuid.UUID `db:"user_id"`
-	Date               time.Time `db:"date"`
-	Score              *int      `db:"score"`
-	TotalSleepDuration *int      `db:"total_sleep_duration"`
-	Efficiency         *int      `db:"efficiency"`
-	Latency            *int      `db:"latency"`
-	REMSleepDuration   *int      `db:"rem_sleep_duration"`
-	DeepSleepDuration  *int      `db:"deep_sleep_duration"`
-	LightSleepDuration *int      `db:"light_sleep_duration"`
-	AwakeTime          *int      `db:"awake_time"`
-	RestlessPeriods    *int      `db:"restless_periods"`
+	ID                 uuid.UUID `db:"id" json:"id"`
+	UserID             uuid.UUID `db:"user_id" json:"user_id"`
+	Date               time.Time `db:"date" json:"date"`
+	Score              *int      `db:"score" json:"score"`
+	TotalSleepDuration *int      `db:"total_sleep_duration" json:"total_sleep_duration"`
+	Efficiency         *int      `db:"efficiency" json:"efficiency"`
+	Latency            *int      `db:"latency" json:"latency"`
+	REMSleepDuration   *int      `db:"rem_sleep_duration" json:"rem_sleep_duration"`
+	DeepSleepDuration  *int      `db:"deep_sleep_duration" json:"deep_sleep_duration"`
+	LightSleepDuration *int      `db:"light_sleep_duration" json:"light_sleep_duration"`
+	AwakeTime          *int      `db:"awake_time" json:"awake_time"`
+	RestlessPeriods    *int      `db:"restless_periods" json:"restless_periods"`
 }
 
 func UpsertDailySleep(db *sqlx.DB, s *DailySleep) error {

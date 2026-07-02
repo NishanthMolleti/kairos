@@ -7,13 +7,13 @@ import (
 )
 
 type Workout struct {
-	ID            uuid.UUID  `db:"id"`
-	UserID        uuid.UUID  `db:"user_id"`
-	StartDatetime time.Time  `db:"start_datetime"`
-	EndDatetime   *time.Time `db:"end_datetime"`
-	Activity      *string    `db:"activity"`
-	Calories      *int       `db:"calories"`
-	Distance      *float64   `db:"distance"`
+	ID            uuid.UUID  `db:"id" json:"id"`
+	UserID        uuid.UUID  `db:"user_id" json:"user_id"`
+	StartDatetime time.Time  `db:"start_datetime" json:"start_datetime"`
+	EndDatetime   *time.Time `db:"end_datetime" json:"end_datetime"`
+	Activity      *string    `db:"activity" json:"activity"`
+	Calories      *int       `db:"calories" json:"calories"`
+	Distance      *float64   `db:"distance" json:"distance"`
 }
 
 func UpsertWorkout(db *sqlx.DB, w *Workout) error {

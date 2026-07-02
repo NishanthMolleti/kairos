@@ -7,11 +7,11 @@ import (
 )
 
 type DailySpO2 struct {
-	ID      uuid.UUID `db:"id"`
-	UserID  uuid.UUID `db:"user_id"`
-	Date    time.Time `db:"date"`
-	AvgSpO2 *float64  `db:"avg_spo2"`
-	MinSpO2 *float64  `db:"min_spo2"`
+	ID      uuid.UUID `db:"id" json:"id"`
+	UserID  uuid.UUID `db:"user_id" json:"user_id"`
+	Date    time.Time `db:"date" json:"date"`
+	AvgSpO2 *float64  `db:"avg_spo2" json:"avg_spo2"`
+	MinSpO2 *float64  `db:"min_spo2" json:"min_spo2"`
 }
 
 func UpsertDailySpO2(db *sqlx.DB, s *DailySpO2) error {

@@ -7,13 +7,13 @@ import (
 )
 
 type User struct {
-	ID           uuid.UUID  `db:"id"`
-	OuraUserID   string     `db:"oura_user_id"`
-	Email        string     `db:"email"`
-	AccessToken  string     `db:"access_token"`
-	RefreshToken string     `db:"refresh_token"`
-	LastSync     *time.Time `db:"last_sync"`
-	CreatedAt    time.Time  `db:"created_at"`
+	ID           uuid.UUID  `db:"id" json:"id"`
+	OuraUserID   string     `db:"oura_user_id" json:"oura_user_id"`
+	Email        string     `db:"email" json:"email"`
+	AccessToken  string     `db:"access_token" json:"-"`
+	RefreshToken string     `db:"refresh_token" json:"-"`
+	LastSync     *time.Time `db:"last_sync" json:"last_sync"`
+	CreatedAt    time.Time  `db:"created_at" json:"created_at"`
 }
 
 func UpsertUser(db *sqlx.DB, u *User) error {

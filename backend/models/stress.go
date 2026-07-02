@@ -7,12 +7,12 @@ import (
 )
 
 type DailyStress struct {
-	ID           uuid.UUID `db:"id"`
-	UserID       uuid.UUID `db:"user_id"`
-	Date         time.Time `db:"date"`
-	StressHigh   *int      `db:"stress_high"`
-	RecoveryHigh *int      `db:"recovery_high"`
-	DaySummary   *string   `db:"day_summary"`
+	ID           uuid.UUID `db:"id" json:"id"`
+	UserID       uuid.UUID `db:"user_id" json:"user_id"`
+	Date         time.Time `db:"date" json:"date"`
+	StressHigh   *int      `db:"stress_high" json:"stress_high"`
+	RecoveryHigh *int      `db:"recovery_high" json:"recovery_high"`
+	DaySummary   *string   `db:"day_summary" json:"day_summary"`
 }
 
 func UpsertDailyStress(db *sqlx.DB, s *DailyStress) error {

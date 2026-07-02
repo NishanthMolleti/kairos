@@ -7,11 +7,11 @@ import (
 )
 
 type HeartRate struct {
-	ID        uuid.UUID `db:"id"`
-	UserID    uuid.UUID `db:"user_id"`
-	Timestamp time.Time `db:"timestamp"`
-	BPM       int       `db:"bpm"`
-	Source    string    `db:"source"`
+	ID        uuid.UUID `db:"id" json:"id"`
+	UserID    uuid.UUID `db:"user_id" json:"user_id"`
+	Timestamp time.Time `db:"timestamp" json:"timestamp"`
+	BPM       int       `db:"bpm" json:"bpm"`
+	Source    string    `db:"source" json:"source"`
 }
 
 func BulkUpsertHeartRate(db *sqlx.DB, rows []HeartRate) error {

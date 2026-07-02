@@ -7,18 +7,18 @@ import (
 )
 
 type DailyActivity struct {
-	ID             uuid.UUID `db:"id"`
-	UserID         uuid.UUID `db:"user_id"`
-	Date           time.Time `db:"date"`
-	Score          *int      `db:"score"`
-	Steps          *int      `db:"steps"`
-	Calories       *int      `db:"calories"`
-	ActiveCalories *int      `db:"active_calories"`
-	METMinutes     *float64  `db:"met_minutes"`
-	SedentaryTime  *int      `db:"sedentary_time"`
-	LowActivity    *int      `db:"low_activity"`
-	MediumActivity *int      `db:"medium_activity"`
-	HighActivity   *int      `db:"high_activity"`
+	ID             uuid.UUID `db:"id" json:"id"`
+	UserID         uuid.UUID `db:"user_id" json:"user_id"`
+	Date           time.Time `db:"date" json:"date"`
+	Score          *int      `db:"score" json:"score"`
+	Steps          *int      `db:"steps" json:"steps"`
+	Calories       *int      `db:"calories" json:"calories"`
+	ActiveCalories *int      `db:"active_calories" json:"active_calories"`
+	METMinutes     *float64  `db:"met_minutes" json:"met_minutes"`
+	SedentaryTime  *int      `db:"sedentary_time" json:"sedentary_time"`
+	LowActivity    *int      `db:"low_activity" json:"low_activity"`
+	MediumActivity *int      `db:"medium_activity" json:"medium_activity"`
+	HighActivity   *int      `db:"high_activity" json:"high_activity"`
 }
 
 func UpsertDailyActivity(db *sqlx.DB, a *DailyActivity) error {

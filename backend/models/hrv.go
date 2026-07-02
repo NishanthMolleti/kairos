@@ -7,11 +7,11 @@ import (
 )
 
 type DailyHRV struct {
-	ID     uuid.UUID `db:"id"`
-	UserID uuid.UUID `db:"user_id"`
-	Date   time.Time `db:"date"`
-	RMSSD  *float64  `db:"rmssd"`
-	BDI    *float64  `db:"bdi"`
+	ID     uuid.UUID `db:"id" json:"id"`
+	UserID uuid.UUID `db:"user_id" json:"user_id"`
+	Date   time.Time `db:"date" json:"date"`
+	RMSSD  *float64  `db:"rmssd" json:"rmssd"`
+	BDI    *float64  `db:"bdi" json:"bdi"`
 }
 
 func UpsertDailyHRV(db *sqlx.DB, h *DailyHRV) error {
